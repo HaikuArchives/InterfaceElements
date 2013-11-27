@@ -1,0 +1,347 @@
+<HTML>
+<HEAD>
+
+<TITLE>Interface Elements: IEEditableView</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+
+<HR><CENTER><h1>IEEditableView</h1>
+</CENTER><HR>
+Derives from: <B>IEEditableObject, IEVariableHandler</B><BR>
+Header: <B>IEEditableView.h</B><BR>
+Library: <B>ObjectHandlerLib.so</B><BR>
+<P>
+<BR><BR>
+<H2><FONT SIZE=6>O</FONT>verview</A></H2>
+
+<b>IEEditableView</b> derives from <B>IEEditableObject</B> and is used to inherit your own  view classes from.
+<B>IEEditableView</B> provides these functionality in addition to <B>IEEditableObject</B> (method names in parenthesis):
+<UL>
+<LI>Handling a variable of any type associated with a view, archiving and instantiating the variable in the view archive (<B>Archive, SetVariable, Variable</B>)
+<LI>Provides virtual functions for updating the view according to the variable, or updating the variable according to the state of the view (<B>UpdateView, UpdateVariable</B>)
+<LI>Adjusts the parent view frame (a special editor view container) during editing (<B>AdjustParentViewFrame</B>)
+<LI>Getting a window-wide unique ID, which is useful for creating BMessages (<B>GetUniqueID</B>)
+</UL>
+<P>
+
+<h3>Archiving and instantiating views</h3>
+The derived class must implement the <B>Archive</B> and <B>Instantiate</B> methods as
+described in the Be Book.
+<p>
+In addition it must implement and export a virtual version of Instantiate called <B>InstantiateView</B> for similar reasons as the UnflattenObject is necessary for IEEditableObject. 
+<p>
+<B>Instantiate</B> and <B>InstantiateView</B> does the same, you should implement <B>InstantiateView</B> as
+<PRE>BView    *MyEditableView::InstantiateView(BMessage *archive)
+{
+    return MyEditableView::Instantiate(archive);    // call the static function
+}
+</pre>
+<p>
+<BR>
+<h3>Creating add-ons for Be classes</h3>
+If you want to write an add-on which will be a standard Be class when instantiated, you need
+to remove your class from the view archive:
+<pre>status_t EditableBBox::Archive(BMessage *data, bool deep) const
+{
+	BBox::Archive(data, deep);
+
+	// replace class with BBox !!!
+	data->RemoveName("class");
+	data->AddString("class", "BBox");
+	
+	return B_OK;
+}
+</pre>
+<BR>
+<h3>Creating dynamically loaded add-ons</h3>
+Your add-ons are loaded dynamically when the view is instantiated. To achieve this
+you need to insert the add-on signature in the view archive:
+<pre>#define SIGNATURE "application/x-company-v3statecheckbox"
+
+status_t V3StateCheckBox::Archive(BMessage *data, bool deep) const
+{
+	BCheckBox::Archive(data, deep);
+
+	// archive variable definition
+	IEEditableView::Archive(data);
+	
+	// add add-on signature
+	data->AddString("add_on", SIGNATURE);
+	
+	return B_OK;
+}
+</pre>
+<p>
+You have the choice to link your add-on with the shared <B>ObjectHandlerLib.so</B> or
+with the static <B>ObjectHandlerLib.a</B>. It is probably better if you select the static
+linking, this way you don't have to ship the ObjectHandlerLib.so library with your
+application in the <CODE>lib</CODE> directory.
+<BR>
+It is a good idea to exclude the object editor from the add-on when you ship
+your application. The add-on file size becomes smaller.
+
+<P>
+<HR>
+<H2><FONT SIZE=6>H</FONT>ook <FONT SIZE=6>F</FONT>unctions</A></H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT><TABLE> 
+<TD><B><TT><A HREF="#InstantiateView()">InstantiateView()</A></B></I></TT></TD> 
+<TD>Must be implemented to instantiate an object from a message archive.
+</TD> 
+<TR> 
+
+<TD><B><TT><A HREF="#UpdateView()">UpdateView()</A></B></I></TT></TD> 
+<TD>Must be implemented if the view can handle a variable. This method updates the view according to the variable. By default it does nothing.
+</TD> 
+<TR> 
+
+<TD><B><TT><A HREF="#UpdateVariable()">UpdateVariable()</A></B></I></TT></TD> 
+<TD>Must be implemented if the view can handle a variable. This method updates the variable according to the view. By default it does nothing.
+</TD> 
+<TR> 
+
+<TD><B><TT><A HREF="#ViewAdded()">ViewAdded()</A></B></I></TT></TD> 
+<TD>Can be implemented to get notification when a new child view is added to the view.
+This is almost never needed, only in special cases when a property of an already existing
+view cannot be changed, only by recreating the view (e.g. BScrollView; the scroll target
+cannot be changed later after it is set in the constructor).
+</TD> 
+<TR> 
+
+<TD><B><TT><A HREF="#ViewRemoved()">ViewRemoved()</A></B></I></TT></TD> 
+<TD>Can be implemented to get notification when a new child view is removed.
+</TD> 
+
+</TABLE></B></I></TT> 
+<P> 
+
+
+</B></I></TT> 
+<HR> 
+<H2><FONT SIZE=6>C</FONT>onstructor and <FONT SIZE=6>D</FONT>estructor</A></H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3>IEEditableView()</A></H3> 
+<P>
+<PRE>   IEEditableView(BMessage *data=NULL);
+</PRE>
+The constructor calls the IEEditableObject constructor, clears the <CODE>data_types</CODE>  message, and instantiates the variable definition (<CODE>variable_definition</CODE>).
+<p>When you derive from the IEEditableView class, you need to specify the data types it can handle (only if it can handle) in the constructor. The data types are stored in a BMessage named <CODE>data_types</CODE>. The data types are added by <CODE>data_types->AddString("type", "datatype")</CODE>.
+<p>
+The message format for <CODE>data_types</CODE>:
+<p>
+<TABLE BORDER> 
+<TH>Data name</TH> 
+<TH>Type code</TH> 
+<TH>Description</TH> 
+<TR> 
+<TD>"type"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>Data type name, e.g. "int32", "bool", "BFont"
+</TD> 
+</TABLE>
+<p>
+<BR>
+Don't forget that you also have to specify the add-on info and base classes in the constructor.
+For an example see the <A href="IEEditableObject.html#IEEditableObject()">IEEditableObject constructor</A>.
+In addition to the standard information you need to specify a view flag
+which provides more information about the view behaviour.
+<p>
+<TABLE BORDER> 
+<TH>Data name</TH> 
+<TH>Type code</TH> 
+<TH>Description</TH> 
+<TR> 
+<TD>"ViewFlags"</TD> 
+<TD><B><TT>B_INT32_TYPE</B></I></TT></TD> 
+<TD>View attributes, see below
+</TD> 
+</TABLE>
+<p>
+<BR>
+Use the combination of these constants (e.g. "<CODE>info.AddInt32("ViewFlags", IEEV_CANNOT_HAVE_CHILDREN);</CODE>" if you want to prevent the user from adding a child view
+to your view):
+<p>
+<TABLE BORDER> 
+<TH>Name</TH> 
+<TH>Description</TH> 
+<TR> 
+<TD><CODE>IEEV_FLAGS_NONE</CODE></TD> 
+<TD>No special flags. This is the default.</TD> 
+<TR> 
+<TD><CODE>IEEV_CANNOT_HAVE_CHILDREN</CODE></TD> 
+<TD>The view will not be allowed to have children during editing. This is useful for many views, e.g. it makes no sense for a BButton to have children. The user will be warned if he wants to add a child view to another view which has this flag set.</TD> 
+<TR> 
+<TD><CODE>IEEV_NOT_RESIZABLE</CODE></TD> 
+<TD>The view cannot be resized by the user in the editor. Use this if the size is computed and maintained by the view automatically.</TD> 
+<TR> 
+<TD><CODE>IEEV_DO_NOT_SHOW_IN_PALETTE</CODE></TD> 
+<TD>If the view is an abstract class and you don't want it to appear in the 'Object Editors' window, set this flag.</TD> 
+<TR> 
+<TD><CODE>IEEV_FORCE_FULL_UPDATE_ON_RESIZE</CODE></TD> 
+<TD>Set this flag if the view behaves badly during resizing (e.g. BBox). This causes the <CODE>B_FULL_UPDATE_ON_RESIZE</CODE> set for the given view during resizing.</TD> 
+</TABLE>
+<p>
+
+<p>
+<br><br>
+<H3>~IEEditableView()</A></H3> 
+<P>
+<PRE>    virtual ~IEEditableView(void);
+</PRE>
+Does nothing.
+<P>
+
+
+
+<HR> 
+<H2><A NAME="Member Functions"><FONT SIZE=6>M</FONT>ember <FONT SIZE=6>F</FONT>unctions</A>
+</H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3><A NAME="Archive()">Archive()</A></H3> 
+<PRE>      void Archive(BMessage *data) const;
+</PRE> 
+<P> 
+<B>Flatten</B> is implemented in IEEditableView so that it can archive the variable settings.
+Therefore be sure to call <CODE>IEEditableView::Archive()</CODE> in the Archive method
+of the derived class.
+<p>
+
+
+<HR> 
+<H3><A NAME="AdjustParentViewFrame()">AdjustParentViewFrame()</A></H3> 
+<PRE>      void AdjustParentViewFrame(void);
+</PRE> 
+<P> 
+Call this if the frame of the view changes to ensure that the parent view has the same size.
+It is necessary only during editing.
+<p>
+
+
+
+
+<HR> 
+<H3><A NAME="GetUniqueID()">GetUniqueID()</A></H3> 
+<PRE>      int32 GetUniqueID(void);
+</PRE> 
+<P> 
+Returns a window-wide unique ID which is useful for creating unique BMessages.
+<p>
+
+
+
+
+<HR> 
+<H3><A NAME="InstantiateView()">InstantiateView()</A></H3> 
+<PRE>      virtual BView *InstantiateView(BMessage *archive)=0;
+</PRE> 
+<P> 
+This is mandatory to implement, and has the same functionality as the static <B>Instantiate</B> function (which you have to implement too). It is sufficient if you implement it as
+<PRE>BView    *MyEditableView::InstantiateView(BMessage *archive)
+{
+    return MyEditableView::Instantiate(archive);    // call the static function
+}
+</pre>
+<p>
+
+
+
+<HR> 
+<H3><A NAME="GetAvailableTypes()">GetAvailableTypes()</A></H3> 
+<PRE>      BMessage *GetAvailableTypes(void);
+</PRE> 
+<P> 
+It returns the <CODE>data_types</CODE> message which stores the data types which this
+view can handle. If you don't add new data type in the constructor, this message will be empty.
+<p>
+<p>
+
+
+<HR> 
+<H3><A NAME="SetVariable()">SetVariable()</A><BR>
+<A NAME="Variable()">Variable()</A></H3> 
+<PRE>      virtual void SetVariable(void *pointer, const char *type=NULL);
+      virtual void *Variable(void);
+</PRE> 
+<P> 
+Sets and returns the variable address which the view operates on. If <i>type</i> is NULL it will not be changed.
+<p>There is no need to override these methods.
+<p>
+
+
+<HR> 
+<H3><A NAME="UpdateVariable()">UpdateVariable()</A></H3> 
+<PRE>      virtual void UpdateVariable(void);
+</PRE> 
+<P> 
+You have to implement <B>UpdateVariable</B> only if your view is able to handle a variable.
+The purpose of this method is to convert the state of the view to the variable.
+<p>E.g. if a view displays a text, but there is a long variable type set, UpdateVariable
+has to convert the text to the long variable.
+This way all variable conversion tasks are done by the add-on, not the user.
+
+<p>
+
+
+
+<HR> 
+<H3><A NAME="UpdateView()">UpdateView()</A></H3> 
+<PRE>      virtual void UpdateView(void);
+</PRE> 
+<P> 
+You have to implement <B>UpdateView</B> only if your view is able to handle a variable.
+The purpose of this method is to update a view according to the variable value.
+<p>E.g. if a view displays a text, but there is a long variable type set, UpdateView
+has to convert the long to text and display it in the view.
+This way all variable conversion tasks are done by the add-on, not the user.
+
+<p>
+
+
+
+<HR> 
+<H3><A NAME="ViewAdded()">ViewAdded()</A></H3> 
+<PRE>      virtual bool ViewAdded(BView *new_child, BView **new_view=NULL);
+</PRE> 
+<P> 
+Can be implemented to get notification when a new child view is added to the view.
+This is almost never needed, only in special cases when a property of an already existing
+view cannot be changed, only by recreating the view (e.g. BScrollView; the scroll target
+cannot be changed later after it is set in the constructor).
+<p>
+If you recreate the view, you need to return the new view in <i>new_view</i>
+and return <code>false</code>. 
+Return <code>true</code> if you want to refuse adding the new view.
+<p>By default this method returns <code>false</code>.
+
+<p>
+
+<HR> 
+<H3><A NAME="ViewRemoved()">ViewRemoved()</A></H3> 
+<PRE>      virtual void ViewRemoved(void);
+</PRE> 
+<P> 
+Can be implemented to get notification when a new child view is removed.
+In most cases this hook function is not needed.
+
+
+
+
+<P>
+<HR>
+
+
+</BODY>
+</HTML>

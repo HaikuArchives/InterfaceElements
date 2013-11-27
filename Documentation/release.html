@@ -1,0 +1,143 @@
+<HTML>
+<HEAD>
+
+<TITLE>Interface Elements: Release Notes</TITLE>
+</HEAD>
+<BODY BGCOLOR=#FFFFFF>
+<HR><CENTER><h1>Release Notes for Version 1.31 (5 July 1999)</h1>
+</CENTER>
+<HR>
+<BASEFONT size=4>
+<p><B>Interface Elements</B> is freeware.
+<br>For updates please check out the <A href="http://w3.datanet.hu/~amezei/IE/">Interface Elements Home Page</A>.<br>
+<p>
+<br>
+
+<h2>Files in the Distribution</h2>
+
+<p>This distribution contains the following files and directories:</p>
+
+<TABLE> 
+<TR> 
+<TD><b>InterfaceElements</b><CODE>        </CODE></TD> 
+<TD>The main application. Run it by doubleclicking on it.
+</TD> 
+<TR> 
+<TD><b>documentation.html</b></TD> 
+<TD>link to Documentation/index.html</TD> 
+<TR> 
+<TD><b>Release Notes.html</b></TD> 
+<TD>link to Documentation/release.html</TD> 
+<TR> 
+<TD><b>AddOns</b></TD> 
+<TD>Interface Elements object editors. You can organize your add-ons in directories.
+</TD> 
+<TR> 
+<TD><b>lib/</b></TD> 
+<TD>The object handler library must accompany Interface Elements.</TD> 
+<TR> 
+<TD><b>Develop/</b></TD> 
+<TD>Headers for developing add-ons as well as some sample add-on sources.</TD> 
+<TR> 
+<TD><b>Documentation/</b></TD> 
+<TD>Home of the HTML documentation. The root file is '<b>index.html</b>'.</TD> 
+</TABLE>
+<P>
+<BR>
+
+
+<h2>Installing Interface Elements</h2>
+
+<ul>
+<li>Unpack the archive by typing "<CODE>unzip InterfaceElements1.31-x86.zip</CODE>" in a Terminal window or by doubleclicking on the zip file..
+<li>Now you are ready to run <b>Interface Elements</b> by doubleclicking on the <CODE>InterfaceElements</CODE> file.
+</ul>
+<br>
+</p>
+<br>
+
+<h2>Known bugs and limitations</h2>
+
+<p>Please send me bug reports if you find one. I reported all BeOS bugs to Be, Inc. Fortunately the number of Interface Elements and BeOS bugs are decreasing.
+<UL>
+<p><LI>BOutlineListView still doesn't instantiate its selection message correctly. I don't
+	recommend specifying a selection/invocation message until this is fixed in the BeOS.
+<p><LI>You still can't drop replicants to the editor since only BShelf can accept replicants.
+	Never mind.<p><LI>The resource file size on PPC is always increasing when saving regardless how many resources
+you delete. This may be a PEF problem since resources are stored as PEF containers on the PPC.
+
+</UL>
+
+<h2>History</h2>
+
+<h3>v1.31 (5 July 1999)</h3>
+Recompiled for BeOS R4.5.
+<UL>
+<p><LI>bug fix: add-ons are found if they are links
+</UL>
+
+<h3>v1.3 (6 Jan 1999)</h3>
+After several beta versions during the R4 beta period this is a full release with documentation and a sample project.
+<UL>
+<p><LI>new add-ons: BTabView and BSlider
+<p><LI>large part of the view editor was rewritten
+<p><LI>view alignment in 6 ways
+<p><LI>sorting the children of a views is now possible (top to bottom, left to right)
+<p><LI>Shift-Control-Command click is passed to the view instead of the editor (test view)
+<p><LI>arrow keys move the selection by one pixel
+<p><LI>the always-problematic BScrollView works well
+<p><LI>a sample project was included in the Develop directory
+</UL>
+
+<h3>v1.1 (3 May 1998)</h3>
+<UL>
+<p><LI>Window editor contains the new look and feel constants and new flags. The view editor is also updated with the new view flag
+<P><LI>The IE library is font sensitive, it has a new method (RescaleArchive), which rescales a view
+or window archive based on the UI design font and the current plain font size. RescaleArchive is a contribution of Mathias Agopian.
+<p><li>Some bugs were fixed, e.g. BMenuBar doesn't crash if you insert a separator item in it
+<p><li>Workaround was inserted for a new R3 BeOS bug: dragging off-screen bitmaps usually didn't work!
+<p><li>Last but not least IE was ported to BeOS for Intel
+</UL>
+
+<h3>v1.02 (8 Jan 1998)</h3>
+<UL>
+<p><LI>BPictureButton add-on is included. It works if you have Datatypes installed.
+<p><LI>The data sizes in the resource window are drawn smoothly as you resize the window.
+<p><LI>Now you can select "Unique ID" for a message constant in a view editor when you edit a view archive
+<p><LI>A header file is generated for view archives which contains the message constants for the view and its children
+<p><LI>BScrollView works well. Drop any views inside the BScrollView, which you want to have as parent.
+<p><LI>When you paste or drop a large or mini icon and you hold down Shift, the icons are inserted as BBitmap archives.
+<p><LI>The documentation is updated and contains detailed steps how to work with archived windows
+<p><LI>When you save the resource file, the currently edited resources are also saved even if you didn't close their window
+<p><LI>Snap now outputs coordinate values which are dividable with the snap value
+<p><LI>The way of exporting the add-on symbols is changed to prepare for BeOS on Intel.
+<p><LI>BMenuItem editor sometimes couldn't assign unique ID. Fixed.
+<p><LI>BMenuBar generated the MenusBeginning with incorrect constant names. Fixed.
+<p><LI>IEWindow didn't instantiate the minimum/maximum window sizes. Fixed. This is actually a BeOS bug, that BWindow doesn't instantiate and set the minimum/maximum size.
+<p><LI>There were problems with resizing the BMenuField. Fixed.
+</UL>
+
+
+<h3>v1.01 (20 Sept 1997)</h3>
+<UL>
+<p><LI>Data Editor now saves the resource data as C source if Command key is held down
+  before dragging the data icon and dropping on a Tracker window
+<p><LI>you can edit the BView colors numerically
+<p><LI>"_wspace" is removed from the window archive so that the window is opened
+  on the current workspace, and not where it was last edited.
+<p><LI>BTextView now updates the text if you close the editor
+<p><LI>BMenu editor does ScrollToSelection, does not flicker when item added
+<p><LI>BTextView (and the textview of BTextControl) had problems with its TextRect due to a BeOS bug (BTextView does
+   not archive/instantiate the IsResizable property). I inserted a workaround: made
+  the text rectangle much wider.
+<p><LI>BMenuItem editor now handles "Unique ID" correctly
+<p><LI>BMenuBar inserts the menu title in the message constant name (e.g. MENU_FILE_OPEN)
+   Therefore you may need to update these in your existing sources
+<p><LI> in the BView editor the flags popup sometimes marked the wrong item
+<p><LI>and some other minor bug fixes
+</UL>
+
+<h3>v1.0 (8 Sept 1997)</h3>
+
+</BODY>
+</HTML>

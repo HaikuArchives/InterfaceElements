@@ -1,0 +1,6 @@
+You will need these headers if you want to write an add-on.
+Detailed documentation can be found in the html documentation
+(Documentation/index.html).
+
+The actual shared library is in the lib directory.
+By request I provide a static version of the library.

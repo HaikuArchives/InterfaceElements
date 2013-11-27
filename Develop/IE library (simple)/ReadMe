@@ -1,0 +1,3 @@
+This simple window class helps you to instantiate window archives.
+Use this library if you don't want to use the possibility of handling
+view variables (variables attached to views).

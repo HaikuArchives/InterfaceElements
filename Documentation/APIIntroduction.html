@@ -1,0 +1,62 @@
+<HTML>
+<HEAD>
+
+<TITLE>Interface Elements: Add-On API Introduction</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+
+<HR><CENTER><h1>Add-On API Introduction</h1>
+</CENTER><HR>
+
+Library: <B>ObjectHandlerLib.so</B>
+<P>
+<BR><BR>
+
+The base class for an Interface Elements add-on is <B><A HREF="IEEditableObject.html">IEEditableObject</A></B>.
+An <B>IEEditableObject</B> is very generic and should provide these functions and information about the object it represents:
+
+<UL>
+<LI>Flattening/unflattening the object to/from a data buffer of a given size
+<LI>Instantiating one or more default objects
+<LI>Returning an editor view (<B>IEObjectEditor</B>) which can edit an object instance
+<LI>Returning a drag representation (a view or bitmap which can be seen during dragging the object)
+<LI>Generating source from the object. This is not applicable to all objects.
+<LI>Providing the base classes of the object
+<LI>Providing add-on creation information (name, author, copyright, help message)
+</UL>
+
+<P>
+There is an <B><A HREF="IEEditableView.html">IEEditableView</A></B> class which derives from <B>IEEditableObject</B> and which you may use to inherit your own editable view classes.
+<B>IEEditableView</B> provides these functions in addition to <B>IEEditableObject</B>:
+<UL>
+<LI>Handling a variable of any type associated with a view, archiving and instantiating the variable in the view archive
+<LI>Provides virtual functions for updating the view according to the variable, or updating the variable according to the state of the view
+<LI>Adjusts the parent view frame (a special editor view container) during editing
+<LI>Getting a window-wide unique ID, which is useful for creating BMessages
+</UL>
+<P>
+<B><A HREF="IEObjectEditor.html">IEObjectEditor</A></B> is the actual object editor which derives from <B>BView</B>. You need to derive your own editor from this class to edit an object. Its functionality:
+<UL>
+<LI>Receiving notification when the target object changed via a hook function
+<LI>Notifying the object roster about the object change
+<LI>Providing the possibility to selecting/editing/remove others objects
+<LI>Deciding whether to be opened as collapsed view.
+
+</UL>
+
+<P>A global instance of an object roster (<B><A HREF="IEObjectRoster.html">IEObjectRoster</A></B>) is available all the time by declaring<PRE><CODE>extern IEObjectRoster *ie_object_roster;</CODE>
+</PRE>
+The tasks of the object roster:
+<UL>
+<LI>Loading the object editor add-ons
+<LI>Providing a list of available object types
+<LI>Looking up an add-on by class name
+<LI>Opening object editor windows
+<LI>Tracking changes in object editors and updating other object editors which edit the same object
+</UL>
+
+</BODY>
+</HTML>

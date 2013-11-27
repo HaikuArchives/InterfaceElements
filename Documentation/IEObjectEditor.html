@@ -1,0 +1,191 @@
+<HTML>
+<HEAD>
+
+<TITLE>Interface Elements: IEObjectEditor</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+
+<HR><CENTER><h1>IEObjectEditor</h1>
+</CENTER><HR>
+Derives from: <B>BView</B><BR>
+Header: <B>IEObjectEditor.h</B><BR>
+Library: <B>ObjectHandlerLib.so</B><BR>
+<P>
+<BR><BR>
+<H2><FONT SIZE=6>O</FONT>verview</A></H2>
+
+
+<B>IEObjectEditor</B> is the actual object editor view which derives from <B>BView</B>. You need to derive your own editor from this class to be able to edit an object. Its functionality (with method names in parenthesis):
+<UL>
+<LI>Receiving notification when the target object changed via a hook function (<B>TargetObjectChanged</B>)
+<LI>Notifying the object roster about the object change (<B>ChangeTargetObject</B>)
+<LI>Providing the possibility to selecting/editing/remove others objects (<B>SelectView, EditView, RemoveView, EditObject, RemoveObject</B>)
+<LI>Deciding whether to be opened as collapsed view (<B>MakeCollapsed</B>)
+</UL>
+
+<P>
+When you create your editor view, typically you add other views in the constructor, and
+set the target handler to <CODE>this</CODE> in <b>AttachedToWindow</b>.
+This is necessary so that your IEObjectEditor derived class will get the messages that the attached views send.
+You call <b>TargetObjectChanged</b> with the target IEEditableObject at the end of the constructor, which will
+set up the views that you added in the constructor.
+Each time you change the target object, you need to call <b>ChangeTargetObject</b>
+to notify the object roster about the changes. That is all you need to do.
+
+<P>
+<HR>
+<H2><FONT SIZE=6>H</FONT>ook <FONT SIZE=6>F</FONT>unctions</A></H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT><TABLE> 
+<TD><B><TT><A HREF="#TargetObjectChanged()">TargetObjectChanged()</A></B></I></TT></TD> 
+<TD>Must be implemented to update the editor if the target object changes.
+</TD> 
+<TR> 
+<TD><B><TT><A HREF="#UpdateObject()">UpdateObject()</A></B></I></TT></TD> 
+<TD>Must be implemented to update the object based on the editor view.
+</TD> 
+<TR> 
+</TABLE></B></I></TT> 
+<P> 
+
+
+</B></I></TT> 
+<HR> 
+<H2><FONT SIZE=6>C</FONT>onstructor and <FONT SIZE=6>D</FONT>estructor</A></H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3>IEObjectEditor()</A></H3> 
+<P>
+<PRE>   IEObjectEditor(BRect frame, const char* name, IEEditableObject *target)
+</PRE>
+Initializes the BView with <i>frame</i> and <i>name</i>, which are passed unchanged to
+the BView constructor.
+
+
+<p>
+<br><br>
+<H3>~IEObjectEditor()</A></H3> 
+<P>
+<PRE>    virtual ~IEObjectEditor(void);
+</PRE>
+Calls the EditorClosed method of the target IEEditableObject.
+<P>
+
+
+
+<HR> 
+<H2><A NAME="Member Functions"><FONT SIZE=6>M</FONT>ember <FONT SIZE=6>F</FONT>unctions</A>
+</H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3><A NAME="ChangeTargetObject()">ChangeTargetObject()</A></H3> 
+<PRE>      void ChangeTargetObject(IEEditableObject *new_target=NULL);
+</PRE> 
+<P> 
+You must call <B>ChangeTargetObject</B> after you changed the target object.
+You can pass NULL as <i>new_target</i> if the address of the target object was
+not changed. Otherwise if you reallocated the target object, you need to send the
+new address in <i>new_target</i> so that other editors of the same object are also updated.
+<p>
+
+
+<HR> 
+<H3><A NAME="EditObject()">EditObject()</A><BR>
+<A NAME="RemoveObject()">RemoveObject()</A>
+</H3> 
+<PRE>      void EditObject(IEEditableObject *an_object);
+      void RemoveObject(IEEditableObject *an_object);
+</PRE> 
+<P> 
+<b>EditObject</b> opens an editor window for <i>an_object</i>. The parent window of the
+editor window will be the window which this object editor is attached to. This means when the user closes
+an object editor window, its child windows will also be closed.
+<b>RemoveObject</b> closes all editor windows of <i>an_object</i> and deletes <i>an_object</i>. 
+<p>
+
+
+<HR> 
+<H3><A NAME="EditView()">EditView()</A><BR>
+<A NAME="SelectView()">SelectView()</A><BR>
+<A NAME="RemoveView()">RemoveView()</A>
+</H3> 
+<PRE>      void EditView(BView *a_bview);
+      void SelectView(BView *a_bview);
+      void RemoveView(BView *a_bview);
+</PRE> 
+<P> 
+You can use these methods to edit, select or remove a view from a view editor window. 
+<p>
+
+
+
+
+<HR> 
+<H3><A NAME="MakeCollapsed()">MakeCollapsed()</A></H3> 
+<PRE>      void MakeCollapsed(int32 collapsemode);
+</PRE> 
+<P> 
+You can influence whether your editor view opens collapsed, expanded or the default.
+For example the BView editor will be collapsed if the view has a name, expanded otherwise.
+<br><i>collapsemode</i> can be one of these constants:
+<p>
+<TABLE BORDER> 
+<TH>Name</TH> 
+<TH>Description</TH> 
+<TR> 
+<TD><CODE>IE_COLLAPSE_NO_CHANGE</CODE></TD> 
+<TD>The editor view does not change the default collapse mode. This is the default.</TD> 
+<TR> 
+<TD><CODE>IE_COLLAPSE</CODE></TD> 
+<TD>The editor view will collapsed when open.</TD> 
+<TR> 
+<TD><CODE>IE_EXPAND</CODE></TD> 
+<TD>The editor view will expanded when open.</TD> 
+</TABLE>
+<p>
+
+
+<p>
+
+
+
+<HR> 
+<H3><A NAME="TargetObjectChanged()">TargetObjectChanged()</A></H3> 
+<PRE>     virtual void TargetObjectChanged(IEEditableObject *new_target);
+</PRE> 
+<P> 
+You have to implement this hook function in order to update the object editor.
+There is a public <code>target</code> data which you have to load <i>new_target</i>
+into. It is advised to update the views only if their content is changed to minimize
+flickering.
+<p>
+
+<HR> 
+<H3><A NAME="UpdateObject()">UpdateObject()</A></H3> 
+<PRE>     virtual void UpdateObject();
+</PRE> 
+<P> 
+You have to implement this hook function in order to update the object from the editor view.
+In other words you need to convert the views state into the object, just like when the user
+applies his changes.
+<p>
+
+
+
+<P>
+<HR>
+
+
+</BODY>
+</HTML>

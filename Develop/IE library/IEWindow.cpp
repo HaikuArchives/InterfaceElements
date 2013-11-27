@@ -285,9 +285,7 @@ BMessage *IEWindow::FindWindowResource(char *windowname)
 		return window_message;
 	}
 	
-//	return RescaleArchive(window_message);
-	// fuck rescaling
-	return window_message;
+	return RescaleArchive(window_message);
 }
 
 

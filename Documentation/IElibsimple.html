@@ -1,0 +1,100 @@
+<HTML>
+<HEAD>
+
+<TITLE>Interface Elements: The simplified IE library</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+
+<HR><CENTER><h1>The simplified IE library</h1>
+</CENTER><HR>
+Library: <B>/IE library (simple)/IE.a</B><BR>
+<P>
+<BR><BR>
+<H2><FONT SIZE=6>O</FONT>verview</A></H2>
+
+One should not call this a library since it consists of a single class: <B>IEWindow</B>.
+The simple library shows you a way how to instantiate archived windows from the resource file.
+You can use this library only if you don't need the variable handling capabilities of views.
+If you do, have a look at the somewhat more complex <A href="IElib.html">IE library</A>.
+<P>
+<B>IEWindow</B> can instantiate windows from the application executable file, or from
+a BResource if you provide one.<br>
+It can handle a window list of child windows, which it closes in the <a href="#Quit()"><B>Quit</B></A> method. 
+<p>
+<BR>
+</B></I></TT> 
+<HR> 
+<H2><FONT SIZE=6>C</FONT>onstructor and <FONT SIZE=6>D</FONT>estructor</A></H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3>IEWindow()</A></H3> 
+<P>
+<PRE>   IEWindow(char *windowname, BResources *from_resources=NULL);
+</PRE>
+Calls the BWindow constructor with the window archive. The constructor calls <a href="#FindWindowResource()"><B>FindWindowResource</B></A> to find the window by name in the resources.
+<BR>If <i>from_resources</I> is <CODE>NULL</CODE> the resources of the application executable will be used.
+
+<p>
+<br><br>
+<H3>~IEWindow()</A></H3> 
+<P>
+<PRE>    virtual ~IEWindow(void);
+</PRE>
+Deletes the window dependancy list.
+<P>
+
+
+<BR>
+<HR> 
+<H2><A NAME="Member Functions"><FONT SIZE=6>M</FONT>ember <FONT SIZE=6>F</FONT>unctions</A>
+</H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3><A NAME="AddDependantWindow()">AddDependantWindow()</A></H3> 
+<PRE>      void AddDependantWindow(BWindow *window);
+</PRE> 
+<P> 
+You can add a <i>window</i> to the dependancy list. The <i>window</i> will be closed when
+this window is closed in the <a href="#Quit()"><B>Quit</B></A> method.
+<p>
+
+
+<HR> 
+<H3><A NAME="FindWindowResource()">FindWindowResource()</A>
+</H3> 
+<PRE>      BMessage *FindWindowResource(char *windowname, BResources *from_resources=NULL);
+</PRE> 
+<P> 
+<b>FindWindowResource</b> tries to locate a resource called <i>windowname</I> of type <CODE>B_ARCHIVED_OBJECT</CODE> in <i>from_resources</i> or in the application executable if 
+<i>from_resources</i> is <CODE>NULL</CODE>.<P>
+If the window is not found, <b>FindWindowResource</b> will return a default window archive
+with the error in the window title. (This method cannot return <CODE>NULL</CODE> because the BWindow constructor is called with the return value.)
+Such an error can happen only during application development.
+<p>
+
+
+<HR> 
+<H3><A NAME="Quit()">Quit()</A>
+</H3> 
+<PRE>      virtual	void Quit(void);
+</PRE> 
+<P> 
+Closes the windows in the dependancy list. The list items are BMessengers, whose validity is checked
+before locking and quitting the child windows.
+<p>
+
+
+<HR>
+
+
+</BODY>
+</HTML>

@@ -1,0 +1,177 @@
+<HTML>
+<HEAD>
+
+<TITLE>Interface Elements: IEObjectRoster</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+
+<HR><CENTER><h1>IEObjectRoster</h1>
+</CENTER><HR>
+Derives from: <B>-</B><BR>
+Header: <B>IEObjectRoster.h</B><BR>
+Library: <B>ObjectHandlerLib.so</B><BR>
+<P>
+<BR><BR>
+<H2><FONT SIZE=6>O</FONT>verview</A></H2>
+
+
+<B>IEObjectRoster</B> is a central object handler which has the following functionality (with method names in parenthesis):
+<UL>
+<LI>Loading the object editor add-ons (<b>Initialize</b>)
+<LI>Providing a list of available object types (<b>AddOnList, AddOnAt</b>)
+<LI>Looking up an add-on by class name (<b>FindClass</b>)
+<LI>Opening object editor windows (<b>OpenObject, CloseObject</b>)
+<LI>Tracking changes in object editors and updating other object editors which edit the same object
+</UL>
+
+<P>
+An application which uses the <b>ObjectHandlerLib</b> must initialize the global <CODE>ie_object_roster</CODE> variable which is available in all add-ons too. You can access the object handler through <CODE>ie_object_roster</CODE>, although this is rarely needed.
+<p>
+The object editor add-ons are stored in a list where the items point to an <CODE>AddOnInfo</CODE> structure:
+<PRE>
+struct <A NAME="AddOnInfo">AddOnInfo</A>
+{
+	char *filename;
+	char *fullpath;
+	image_id imageid;
+	entry_ref ref;
+	bool loaded;
+
+	IEEditableObject *(*unflatten)(const void *buffer, ssize_t buffersize);
+	IEEditableObject *default_object;	
+	char *classname;	
+	int32 typecode;	
+};
+</PRE>
+<p> The structure members speak for themselves. <CODE>unflatten</CODE> is the exported
+<CODE>UnflattenObject</CODE> method of the IEEditableObject derived class.
+<p>
+</B></I></TT> 
+<HR> 
+<H2><FONT SIZE=6>C</FONT>onstructor and <FONT SIZE=6>D</FONT>estructor</A></H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3>IEObjectRoster()</A></H3> 
+<P>
+<PRE>   IEObjectRoster(entry_ref *add_ons_directory=NULL);
+</PRE>
+Initializes data members and calls <b>Initialize</b> to load the add-ons. If <i>add_ons_directory</i>
+is NULL, it tries to load the add-on from a directory called 'AddOns' in the application directory.
+
+
+<p>
+<br><br>
+<H3>~IEObjectRoster()</A></H3> 
+<P>
+<PRE>    virtual ~IEObjectRoster(void);
+</PRE>
+Unloads the add-ons and frees all previously reserved data.
+<P>
+
+
+
+<HR> 
+<H2><A NAME="Member Functions"><FONT SIZE=6>M</FONT>ember <FONT SIZE=6>F</FONT>unctions</A>
+</H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+
+<HR> 
+<H3><A NAME="AddOnAt()">AddOnAt()</A></H3> 
+<PRE>      AddOnInfo *AddOnAt(int32 index);
+</PRE> 
+<P> 
+Returns the nth add-on from the add-on list. Same as <CODE>(AddOnInfo*)AddOnList()->ItemAt(index)</CODE>
+<p>
+
+
+<HR> 
+<H3><A NAME="AddOnList()">AddOnList()</A></H3> 
+<PRE>      BList *AddOnList(void);
+</PRE> 
+<P> 
+Returns the list where the add-ons are stored. Each item in the list is a pointer to an <A href="#AddOnInfo">AddOnInfo</A> structure.
+<p>
+
+
+<HR> 
+<H3><A NAME="CloseObject()">CloseObject()</A></H3> 
+<PRE>      void CloseObject(IEEditableObject *object);
+</PRE> 
+<P> 
+Closes all editor windows which the <i>object</i> is edited in and deletes the <i>object</i>. Same as <CODE>delete object;</CODE>
+<p>
+
+
+
+<HR> 
+<H3><A NAME="FindClass()">FindClass()</A></H3> 
+<PRE>      AddOnInfo *FindClass(char *byname);
+      AddOnInfo *FindClass(BArchivable *archivable);
+</PRE> 
+<P> 
+Returns the <A href="#AddOnInfo">AddOnInfo</A> pointer of a given data type, or NULL
+if not found.
+<p>
+
+
+
+
+<HR> 
+<H3><A NAME="Initialize()">Initialize()</A></H3> 
+<PRE>      void Initialize(entry_ref *add_ons_directory=NULL);
+</PRE> 
+<P> 
+<b>Initialize</b> is called by the constructor to load the add-ons. If <i>add_ons_directory</i>
+is NULL, it tries to load the add-on from a directory called 'AddOns' in the application directory.
+<p>
+
+
+<HR> 
+<H3><A NAME="InsertAddOn()">InsertAddOn()</A></H3> 
+<PRE>      void InsertAddOn(AddOnInfo *ai);
+</PRE> 
+<P> 
+<b>InsertAddOn</b> inserts an add-on in the add-on list. Use this for example if you have
+an object editor in your application, not as a separate add-on. Of course you have to fill
+the <A href="#AddOnInfo">AddOnInfo</A> structure for the add-on. You have to set the <CODE>loaded</CODE> data to <CODE>false</CODE> so that the "add-on" will not be unloaded.
+<p>
+
+
+<HR> 
+<H3><A NAME="Lock()">Lock()</A><BR>
+<A NAME="Unlock()">Unlock()</A>
+</H3> 
+<PRE>      bool	Lock();
+      void	Unlock();
+</PRE> 
+<P> 
+Lock the object roster if you access the <CODE>add-on list</CODE> or the <CODE>editor_list</CODE>. The <CODE>editor_list</CODE> is a list of existing IEEditableObjects but is not documented because you never need to access it.
+<p>
+
+
+
+<HR> 
+<H3><A NAME="OpenObject()">OpenObject()</A></H3> 
+<PRE>      IEObjectEditorWindow *OpenObject(IEEditableObject *object, char *title=NULL, BWindow *parent=NULL);
+</PRE> 
+<P> 
+<b>OpenObject</b> opens an editor window, and returns the window pointer, or NULL
+if the <i>object</i> has no editor. You can specify the window <i>title</i>, and a <i>parent</i>
+window. The editor window will be closed if its parent window is closed.
+
+
+<P>
+<HR>
+
+
+</BODY>
+</HTML>

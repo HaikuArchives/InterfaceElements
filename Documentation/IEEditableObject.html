@@ -1,0 +1,585 @@
+<HTML>
+<HEAD>
+
+<TITLE>Interface Elements: IEEditableObject</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+
+<HR><CENTER><h1>IEEditableObject</h1>
+</CENTER><HR>
+Derives from: <B>-</B><BR>
+Header: <B>IEEditableObject.h</B><BR>
+Library: <B>ObjectHandlerLib.so</B><BR>
+<P>
+<BR><BR>
+<H2><FONT SIZE=6>O</FONT>verview</A></H2>
+
+<B>IEEditableObject</B> is the base class for an Interface Elements add-on.
+An <B>IEEditableObject</B> is very generic and should provide these functions and information about the object it represents (method names in parenthesis):
+
+<UL>
+<LI>Flattening/unflattening the object to/from a data buffer of a given size (<B>Flatten, FlattenedSize, Unflatten</B>)
+<LI>Instantiating one or more default objects (<B>Unflatten</B>)
+<LI>Returning an editor view which can edit an object instance (<B>GetEditor</B>)
+<LI>Returning a drag representation (a view or bitmap which can be seen during dragging the object)  (<B>GetDragRepresentation</B>)
+<LI>Generating source from the object. This is not applicable to all objects. (<B>Generate</B>)
+<LI>Providing the base classes of the object (<B>GetBaseClasses</B>)
+<LI>Providing add-on creation information (name, author, copyright, help message) (<B>GetInfo</B>)
+</UL>
+
+<h3>Instantiating the object from a byte stream</h3>
+The derived class must implement the <B>Unflatten</B> method which returns an object instance.
+(Unflatten differs from the BFlattenable usage of unflattening that it does not modify the object
+which it was called on, but returns a new instance.)
+<p>
+In addition it must implement and export a static version of Unflatten called <B>UnflattenObject</B>. This is necessary because sometimes only an object pointer is known and not the static UnflattenObject function, while sometimes only the UnflattenObject address is known and not
+a valid object.
+<p>
+<B>Unflatten</B> and <B>UnflattenObject</B> does the same, it is OK if you implement <B>Unflatten</B> as
+<PRE>IEEditableObject    *MyEditableThing::Unflatten(const void *buf, ssize_t size)
+{
+    return MyEditableThing::UnflattenObject(buf, size);    // call the static function
+}
+</PRE>
+<B>Unflatten</B> has many functions depending on if <I>buf</I> is <CODE>NULL</CODE>, or <I>size</I> is <CODE>0L</CODE>, or both, which is discussed in the method description. The only thing I can tell you so early that <B>Unflatten</B> should return a default object instance if <I>buf</i><CODE> == NULL</CODE>.<p>
+
+<br>
+<h3><A NAME="export">Which symbols to export and how?</A></h3>
+For an editable object you need to export the <B>UnflattenObject</B> method as extern "C" function this way:
+
+<PRE>
+extern "C" __declspec(dllexport) IEEditableObject *UnflattenObject__EditableWindow(const void *buf, ssize_t size);
+
+
+IEEditableObject *UnflattenObject__EditableWindow(const void *buf, ssize_t size)
+{
+	return EditableWindow::UnflattenObject(buf, size);
+};
+</PRE>
+That is you don't export it from the class declaration. Don't forget to append the class name
+after the two underscores, this makes having more objects in one add-on file possible.<p>
+Optionally you can export another symbol, an <B>AddOnLoaded</B> method, which is called with
+the add-on file entry_ref on load time. This is useful for loading resources from the add-on file:
+
+<PRE>
+extern "C" __declspec(dllexport) void AddOnLoaded__EditableWindow(entry_ref *addonref);
+
+
+void AddOnLoaded__EditableWindow(entry_ref *addonref)
+{
+	BFile addonfile;
+	BResources resources;
+	void *resource;
+	size_t resource_size;
+		
+	if(addonfile.SetTo(addonref, B_READ_ONLY)==B_OK){
+		if(resources.SetTo(&addonfile)==B_OK){
+			resource=resources.FindResource(B_ARCHIVED_OBJECT, "YourResource", &resource_size);
+			if(resource){	// got it!
+				// do something with the resource...
+			}else{
+				(new BAlert("", "Window Editor cannot find its resources. \n\nMake sure the resources are linked to the add-on.", "OK"))->Go();
+			}
+		}
+	}
+}
+</PRE>
+
+<br>
+<h3>Accepting a dropped object</h3>
+Your add-on can accept dropped objects which were dragged from the 'Object Editors' window of Interface Elements. The message that you will receive has <CODE>IE_DATATYPE ('Idat')</CODE> as the <I>what</i> member.
+<p>
+<TABLE BORDER> 
+<TH>Data name</TH> 
+<TH>Type code</TH> 
+<TH>Description</TH> 
+<TR> 
+<TD>"Name"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>Data type name, e.g. "long", "Small Icon", "BCheckBox"
+</TD> 
+<TR> 
+<TD>"FlattenedObject"</TD> 
+<TD><B><TT>B_RAW_TYPE</B></I></TT></TD> 
+<TD>The flattened object. Unflatten it by using the right add-on whose type is in "Name". 
+</TD> 
+</TABLE>
+<P>
+<P>
+E.g. if <CODE>msg</CODE> contains the above info:<PRE>AddOnInfo *ai=ie_object_roster->FindClass(msg->FindString("Name"));
+if(ai){
+	const void *data;
+	ssize_t datasize;
+	if(msg->FindData("FlattenedObject", B_RAW_TYPE, &data, &datasize)==B_OK){
+		IEEditableObject *the_object=ai->unflatten(data, datasize);
+		if(the_object){	// success by instantiating
+		}else{	// instantiating not successful
+		}
+	}else{	// data not found in message, this should not happen
+	}
+}else{	// class add-on not found
+}
+</PRE>
+<BR>
+
+
+
+<P>
+<HR>
+<H2><FONT SIZE=6>H</FONT>ook <FONT SIZE=6>F</FONT>unctions</A></H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT><TABLE> 
+<TD><B><TT><A HREF="#FlattenedSize()">FlattenedSize()</A></B></I></TT></TD> 
+<TD>Must be implemented if the editable object is not BArchivable. By default it returns the
+archive size if the object is a BArchivable, null otherwise.
+</TD> 
+<TR> 
+
+<TD><B><TT><A HREF="#Flatten()">Flatten()</A></B></I></TT></TD> 
+<TD>Must be implemented if the editable object is not BArchivable. By default it returns the
+flattened archive if the object is a BArchivable, NULL otherwise.
+</TD> 
+<TR> 
+
+<TD><B><TT><A HREF="#Unflatten()">Unflatten()</A></B></I></TT></TD> 
+<TD>Must be implemented to instantiate the object from a byte stream.
+</TD> 
+<TR> 
+
+<TD><B><TT><A HREF="#GetEditor()">GetEditor()</A></B></I></TT></TD> 
+<TD>Can be implemented to build an object editor view (IEObjectEditor). By default it returns
+NULL, which means the object has no editor.
+</TD> 
+<TR> 
+
+<TD><B><TT><A HREF="#GetDragRepresentation()">GetDragRepresentation()</A></B></I></TT></TD> 
+<TD>Can be implemented to show a bitmap or view when the user drags the object. By default
+the class name over a blue background is dragged if the object is not a BView, or the default
+BView if the object is a kind of BView.
+</TD> 
+<TR> 
+
+<TD><B><TT><A HREF="#Generate()">Generate()</A></B></I></TT></TD> 
+<TD>Can be implemented to create source files from the object. By default it does nothing.
+</TD> 
+<TR> 
+
+
+
+</TABLE></B></I></TT> 
+<P> 
+
+
+</B></I></TT> 
+<HR> 
+<H2><FONT SIZE=6>C</FONT>onstructor and <FONT SIZE=6>D</FONT>estructor</A></H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3><A NAME="IEEditableObject()">IEEditableObject()</A></H3> 
+<P>
+<PRE>    IEEditableObject(void);
+</PRE>
+The constructor initializes internal data and registers the editable object in the object roster.
+<p>When you override the IEEditableObject class, you need to specify base classes and add-on
+information in the constructor. The base classes are stored in a BMessage named <CODE>base_classes</CODE> and the add-on info is also stored in a BMessage named <CODE>info</CODE>.
+<p>As an example here is the constructor of EditableBButton (IEEditableView derives from IEEditableObject) :<p>
+<pre>
+EditableBButton::EditableBButton(BMessage *data)
+	: BButton(data), IEEditableView()
+{
+	base_classes.MakeEmpty();
+	base_classes.AddString("class", "BButton");
+	base_classes.AddString("class", "BControl");
+	base_classes.AddString("class", "BView");
+	
+	info.MakeEmpty();
+	info.AddString("Name", "BButton");
+	info.AddString("Author", "Attila Mezei");
+	info.AddString("Copyright", B_UTF8_COPYRIGHT " 1997 Attila Mezei");
+	info.AddString("Message", "This is a button for initiating an action. A message can be posted when it is pressed.");
+	info.AddInt32("TypeCode", B_ARCHIVED_OBJECT);
+}
+
+</pre>
+You should add the base classes in a top to bottom level order, beginning with the actual class which
+you turn to editable. The message format for <CODE>base_classes</CODE>:
+<p>
+<TABLE BORDER> 
+<TH>Data name</TH> 
+<TH>Type code</TH> 
+<TH>Description</TH> 
+<TR> 
+<TD>"class"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>Class name, e.g. "BControl"
+</TD> 
+</TABLE>
+<p>
+You can add all kinds of information to the class by adding data to the <CODE>info</CODE> message. These are shown in the about box of the add-on:
+<p>
+<TABLE BORDER> 
+<TH>Data name</TH> 
+<TH>Type code</TH> 
+<TH>Description</TH> 
+<TR> 
+<TD>"Name"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The name of the class or datatype which this add-on represents, e.g. "long", "BControl"
+</TD> 
+
+<TR> 
+<TD>"Author"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The author's name.
+</TD> 
+
+<TR> 
+<TD>"Copyright"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>Copyright message.
+</TD> 
+
+<TR> 
+<TD>"Message"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>Help text for the user.
+</TD> 
+
+<TR> 
+<TD>"TypeCode"</TD> 
+<TD><B><TT>B_INT32_TYPE</B></I></TT></TD> 
+<TD>32-bit type code for the object. Should be B_ARCHIVED_OBJECT if the object is a BArchivable.
+</TD> 
+
+</TABLE>
+<p>
+<br><br>
+<H3><A NAME="~IEEditableObject()">~IEEditableObject()</A></H3> 
+<P>
+<PRE>    virtual ~IEEditableObject(void);
+</PRE>
+Notifies the object roster that the object is deleted.
+<P>
+
+
+<HR>
+<H2><A NAME="Static Functions"><FONT SIZE=6>S</FONT>tatic <FONT SIZE=6>F</FONT>unctions</A>
+</H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3><A NAME="AddOnLoaded()">AddOnLoaded()</A></H3> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT><PRE>      static void AddOnLoaded(entry_ref *ref);
+</PRE> 
+<P> 
+This function is optional to implement and export. <B>AddOnLoaded</B> is called when the
+add-on image is loaded in memory and can be used to read the resources if necessary.
+<p>
+<HR> 
+<H3><A NAME="UnflattenObject()">UnflattenObject()</A></H3> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT><PRE>      static IEEditableObject *UnflattenObject(const void *buf, ssize_t size);
+</PRE> 
+<P> 
+This function is mandatory to implement and <A href="#export">export</a>. <B>UnflattenObject</B> returns an instance
+of the class or datatype from a flattened binary data.
+<BR>
+<UL>
+<LI>If <I>buf</I> is NULL, <I>size</I> serves as an index to return the nth default object or NULL if out of range. An object may have several default instances but usually there is only one. E.g. an editable BScrollView may return a scrollview with no sliders (<I>size</I>==0), a scrollview with only horizontal slider (<I>size</I>==1), 
+a scrollview with only vertical slider (<I>size</I>==2), a scrollview with horizontal and vertical sliders (<I>size</I>==3), and NULL otherwise (<I>size</I>>3).
+<LI>If <I>buf</I> is not NULL and <I>size</I>>0, a new object instance must be returned by unflattening the data
+in the buffer.
+<LI>If <I>buf</I> is not NULL but <I>size</I> is 0, it is a special case: <i>buf</i> points to an object which must be
+made the target of an editable object. In these cases a default object must be created and set its
+target data member to <I>buf</I>, and return that object. See the explanation of <A href="#Target()">Target()</a> for details.
+</UL>
+
+<P> 
+</B></I></TT> 
+<HR> 
+<H2><A NAME="Member Functions"><FONT SIZE=6>M</FONT>ember <FONT SIZE=6>F</FONT>unctions</A>
+</H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3><A NAME="Flatten()">Flatten()</A></H3> 
+<PRE>      virtual	status_t	Flatten(void *buffer, ssize_t size);
+</PRE> 
+<P> 
+<B>Flatten</B> is implemented by derived classes to write the object into the buffer. There are <i>size</i> bytes of 
+memory available at the buffer address. If this isn't at least as much memory as the <B>FlattenedSize</B> function 
+says is necessary, <B>Flatten</B> should return an error. If successful, it should return B_OK. 
+<P>
+By default it flattens the object if it is a kind of BArchivable. This means when your class does not
+derive from BArchivable, you have to implement <B>Flatten</B>.
+<p>
+
+
+<HR> 
+<H3><A NAME="FlattenedSize()">FlattenedSize()</A></H3> 
+<PRE>      virtual	ssize_t		FlattenedSize();
+</PRE> 
+<P> 
+Implemented by derived classes to return the amount of memory needed to hold the flattened object. This is the 
+minimal amount that must be allocated and passed to <B>Flatten</B>. 
+<P>
+By default it returns the size of the flattened archive if the object is a kind of BArchivable. This means when your class does not
+derive from BArchivable, you have to implement <B>FlattenedSize</B>.
+<p>
+
+
+
+
+<HR> 
+<H3><A NAME="Generate()">Generate()</A></H3> 
+<PRE>      virtual BMessage *Generate(BMessage *info);
+</PRE> 
+<P> 
+Implemented by derived classes to create C++ source from the object. You can call <B>Generate</B> yourself if you provide the <I>info</I> data.
+<p>
+The <I>info</I> message contains this:<p>
+<TABLE BORDER> 
+<TH>Data name</TH> 
+<TH>Type code</TH> 
+<TH>Description</TH> 
+<TR> 
+<TD>"directory"</TD> 
+<TD><B><TT>B_REF_TYPE</B></I></TT></TD> 
+<TD>The directory where files should be put in.
+</TD> 
+
+<TR> 
+<TD>"name"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The name of the object. The resource editor puts the resource name here.
+</TD> 
+
+<TR> 
+<TD>"windowname"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The window name.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+<TR> 
+<TD>"windowclass"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The window class. This is the same as 'windowname' but converted to a valid C identifier.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+<TR> 
+<TD>"viewnameid"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The view name converted to a valid C identifier.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+<TR> 
+<TD>"iewindowview"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The string <CODE>"IE_&ltwindowname&gt_&ltviewname&gt"</CODE> which can be used as an identifier for message constants, for example. The last four information are passed to the view to ease the job of
+creating C++ source fragments.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+</TABLE>
+<P>
+
+The <B>what</B> data of the return message is either <CODE>B_OK</CODE> or <CODE>B_ERROR</CODE> depending on if the generation was successful or not.
+The return message also contains these data:<p>
+<TABLE BORDER> 
+<TH>Data name</TH> 
+<TH>Type code</TH> 
+<TH>Description</TH> 
+<TR> 
+<TD>"file"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>A filename if file was generated. View objects do not generate file, they include the following information in the message:
+</TD> 
+
+<TR> 
+<TD>"Header"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The text will be inserted in the window header file (<B>WindowName.h</B>). If the window includes more than one views of this type, the text will be inserted in the header for each view.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+<TR> 
+<TD>"HeaderOnce"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The text will be inserted in the window header file (<B>WindowName.h</B>). If the window includes more than one views of this type, the text will be inserted in the header only once, not for each view.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+
+<TR> 
+<TD>"WindowDefs"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The text will be inserted in the window definitions header file (<B>WindowNameDefs.h</B>). If the window includes more than one views of this type, the text will be inserted in the header for each view.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+<TR> 
+<TD>"WindowDefsOnce"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>The text will be inserted in the window definitions header file (<B>WindowNameDefs.h</B>). If the window includes more than one views of this type, the text will be inserted in the header only once, not for each view.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+<TR> 
+<TD>"MessageConstant"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>A message constant looks like this:<BR>
+<CODE>    &ltCONSTANTNAME&gt = 0x&ltsome constant&gt,</CODE><BR>The comma and the carriage return is important
+at the end of line, as this will be a line in an <CODE>enum</CODE> block.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+<TR> 
+<TD>"MessageReceived"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>This text will be inserted in <B>WindowName::MessageReceived()</B>. It should be a <CODE>case</CODE> block.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+<TR> 
+<TD>"Constructor"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>This text will be inserted in <B>WindowName::WindowName()</B>. <BR>(Only if the object is a view in a window!)
+</TD> 
+
+<TR> 
+<TD>"SetVariable"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>This text will be inserted in the constructor (<B>WindowName::WindowName()</B>). It is almost the same as "Constructor" but the text is inserted in a
+part where variables should be initialized.<BR>(Only if the object is a view in a window!)
+</TD> 
+
+
+<TR> 
+<TD>"MenusBeginning"</TD> 
+<TD><B><TT>B_STRING_TYPE</B></I></TT></TD> 
+<TD>This text will be inserted in <B>WindowName::MenusBeginning()</B>. <BR>(Only if the object is a view in a window!)
+</TD> 
+
+</TABLE>
+<P>
+
+
+
+
+<HR> 
+<H3><A NAME="GetBaseClasses()">GetBaseClasses()</A></H3> 
+<PRE>      BMessage *GetBaseClasses(void);
+</PRE> 
+<P> 
+Returns the <CODE>base_classes</CODE> member which is filled in the constructor.
+You can request the class or datatype what the editable object represents by <CODE>GetBaseClasses()->FindString("class")</CODE>.
+<p>
+
+
+
+
+<HR> 
+<H3><A NAME="GetDragRepresentation()">GetDragRepresentation()</A></H3> 
+<PRE>      virtual void GetDragRepresentation(BView **a_view, BBitmap **a_bitmap);
+</PRE> 
+<P> 
+Can be implemented to show a bitmap or view when the user drags the object. By 
+default the class name over a blue background is dragged if the object is not a 
+BView, or the default BView if the object is a kind of BView.<p>
+If you have a view to drag, initialize the <i>a_view</i> pointer to point to the view.
+Load NULL to the <i>a_bitmap</i> pointer.
+If you want to show a bitmap, initialize <i>a_bitmap</i> and clear <i>a_view</i>.
+<p>
+
+
+
+<HR> 
+<H3><A NAME="GetEditor()">GetEditor()</A></H3> 
+<PRE>      virtual IEObjectEditor *GetEditor(IEEditableObject *object_to_edit);
+</PRE> 
+<P> 
+This method creates an object editor view which is a kind of IEObjectEditor. In order to
+make an object editor you need to derive from IEObjectEditor. The IEObjectEditor has a
+target editable object, which is <i>object_to_edit</i> in this case (not the object on which
+GetEditor is invoked).
+<p>You must check whether the <i>object_to_edit</i> pointer fits you. You can be sure that
+it is an IEEditableObject. Use dynamic cast if necessary.
+This can be tricky because for example if you have an EditableBControl class which derives from
+IEEditableView and BControl, you shouldn't try to cast <i>object_to_edit</i> to EditableBControl,
+because it may be an EditableBCheckBox, and cannot cast to EditableBControl.
+You should try to cast it to BControl instead.
+
+<p>
+By default it returns NULL, which means the object has no editor. 
+<p>
+
+
+<HR> 
+<H3><A NAME="GetInfo()">GetInfo()</A></H3> 
+<PRE>      BMessage *GetInfo(void);
+</PRE> 
+<P> 
+Returns the <CODE>info</CODE> member which is filled in the constructor.
+You can request add-on information with this method, e.g. <CODE>GetInfo()->FindString("Author")</CODE>.
+<p>
+
+
+<HR> 
+<H3><A NAME="Target()">Target()</A></H3> 
+<PRE>      void *Target();
+</PRE> 
+<P> 
+Every IEEditableObject has a target which is an object (or data) pointer which the IEEditableObject
+represents. The target is usually itself if you derive your class with multiple inheritence, but external
+objects can also be edited 
+<UL>
+<li>if they already exist at the time of IEEditableObject creation (see when UnflattenObject is called with <i>buf</i>!=NULL
+but <i>size</i>==0L) 
+<li>or if the target class cannot be derived or not advised to derive from, 
+<li>or if the target is not a class (e.g. a long or float).
+</UL>
+
+In these cases you can set the <CODE>target</CODE> data member to the real target, and handle the target object appropriately. E.g. the editor also should work with the target pointer. 
+Since the Target method returns a void pointer, you cannot dynamic cast it. The safest way is to
+examine in the object editor (which has also a target BTW, but that is an IEEditableObject...)
+if the target is the same as the editable object, and do according to that.
+
+<p>
+
+
+
+
+
+
+
+
+<HR> 
+<H3><A NAME="Unflatten()">Unflatten()</A></H3> 
+<PRE>      virtual IEEditableObject	*Unflatten(const void *buf, ssize_t size)=0;
+</PRE> 
+<P> 
+This method is mandatory to implement. Its purpose is the same as of <B>UnflattenObject</B>,
+please see the description of <B><A href="#UnflattenObject()">UnflattenObject</a></B>
+<p>
+You can implement Unflatten as
+<PRE>IEEditableObject    *MyEditableThing::Unflatten(const void *buf, ssize_t size)
+{
+    return MyEditableThing::UnflattenObject(buf, size);    // call the static function
+}
+</PRE>
+<P>
+<HR>
+
+
+</BODY>
+</HTML>

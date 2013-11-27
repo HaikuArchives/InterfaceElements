@@ -1,0 +1,49 @@
+<HTML>
+<HEAD>
+
+<TITLE>The Steps of Creating an Interface Elements Application</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+
+<HR><CENTER><h1>The Steps of Creating an Interface Elements Application</h1>
+</CENTER><HR>
+
+<P>
+<BR><BR>
+
+<OL>
+<LI>You create your windows in a resource file. (Sometimes you only need
+   to design views, not windows, this is also possible. Just drag a BView
+   into the resources, open it for editing and add other views to it.)
+   <br>Name the window resource (e.g. <B>"About Window"</B>)<P>
+<LI>Save your resource file and select '<B>Generate Sources</B>' from the file
+   menu.
+   For the first time it will create <B>AboutWindow.cpp</B>, <B>AboutWindow.h</B> and
+   <B>AboutWindowDefs.h</B>. The former two are just almost empty class 
+   declarations with some methods filled in according to the views 
+   (e.g. MessageReceived).
+   These 2 files will not be overwritten later, so you can modify them.<BR>
+   <B>AboutWindowDefs.h</B> will always be generated when you select '<B>Generate 
+   Sources</B>' and contains the view names and message constants. Don't
+   modify this file.<p>
+<LI>Add the resource file and the window sources to the project.
+   You also need to add a static library (<B>IE.a</B>) which you find in the 
+   "Develop/IE library" directory. This library has the full source 
+   code there which you may want to examine. <B>IE.a</B> contains the IEWindow
+   class which is capable of instantiating a window by name from the
+   resources. Alternatively you can add the 3 classes (IEApplication, IEResourceHandler, IEWindow) to your project.<p>
+<LI>You decide whether you want your application object derived from 
+   <B>IEApplication</B> or <B>BApplication</B>. If you choose the latter, you should
+   insert the same functionality to your application class as in
+   <B>IEApplication</B>. The only task of <B>IEApplication</B> is to initialize a
+   global resource handler. Please see <B>IEApplication.cpp</B> for details.<p>
+<LI>In any way you must insert this line to one of your source files 
+   (preferably in the application class implementation):<PRE>	IEResourceHandler *resourcehandler;
+</PRE>
+</OL>
+
+</BODY>
+</HTML>

@@ -1,0 +1,200 @@
+<HTML>
+<HEAD>
+
+<TITLE>Interface Elements: The IE library</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR=#FFFFFF>
+
+
+<HR><CENTER><h1>The IE library</h1>
+</CENTER><HR>
+Library: <B>/IE library/IE.a</B><BR>
+<P>
+<BR><BR>
+<H2><FONT SIZE=6>O</FONT>verview</A></H2>
+
+The purpose of this library to instantiate windows which may contain views that
+are the representation of a variable. The window methods (<B>SetViewVariable, UpdateView,
+ UpdateVariable, UpdateAllViews, UpdateAllVariables</B>) will help you accessing the variable. The library consists of
+three classes: <B>IEApplication, IEResourceHandler</B> and <B>IEWindow</B>, of which only IEWindow is documented in detail. You can better understand these classes by studying their
+sources.
+<P>
+<FONT COLOR="#ff0000">NOTE: using variables is depreciated and thus not recommended nor supported! This kind of functionality would be useful if it was supported at a lower level, by all BeOS classes. Since variable handling is only provided by IE add-ons, this has created some confusion among developers.</FONT>
+<p>
+<p><br>
+
+<h2>IEApplication</h2>
+
+<B>IEApplication</B> has only one functionality: to initialize the resource handler object in its
+constructor and delete it in the destructor. <B>IEApplication</B> quits itself if there is something
+wrong with the resource handler object creation. This may happen only during application
+development.
+<p>
+Each application (or add-on) should have a global resource handler object which is used
+to access the resources:
+<PRE>IEResourceHandler *resourcehandler;
+</PRE>
+<FONT COLOR="#ff0000">IMPORTANT: you have to insert the above line into your application otherwise you will get link errors!</FONT>
+<p>
+<BR>
+<h2>IEResourceHandler</h2>
+
+The resource handler has a list of <B>BResource</b>s, and is able to find any resources
+from this list.
+<p>The second task of the resource handler is to maintain an application-wide window list
+of open windows. The <B>IEWindow</B> objects are automatically register themselves in the constructor and remove themselves in the Quit method from this window list.
+When the last window is closed, <CODE>B_QUIT_REQUESTED</CODE> is sent to the application.
+<p><br>
+<h2>IEWindow</h2>
+
+<B>IEWindow</B> can instantiate windows from the resources with the help of the resource handler.<br>
+It also has methods which access the variables of (IEEditableView derived) dynamically
+loaded view add-ons which have variable support. Using these add-ons has a big advantage,
+that you don't have to bother with variable conversion, you just tell the view the address
+and type of the variable and the rest is handled by the view.
+<br>
+<B>IEWindow</B> also handles a window list of child windows, which it closes in the <a href="#Quit()"><B>Quit</B></A> method. 
+
+<p>
+<BR>
+</B></I></TT> 
+<HR> 
+<H2><FONT SIZE=6>C</FONT>onstructor and <FONT SIZE=6>D</FONT>estructor</A></H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3>IEWindow()</A></H3> 
+<P>
+<PRE>   IEWindow(char *windowname);
+</PRE>
+Calls the BWindow constructor with the window archive. The constructor calls <a href="#FindWindowResource()"><B>FindWindowResource</B></A> to find the window by name in the resources.
+
+<p>
+<br><br>
+<H3>~IEWindow()</A></H3> 
+<P>
+<PRE>    virtual ~IEWindow(void);
+</PRE>
+Deletes the window dependancy list.
+<P>
+
+
+<BR>
+<HR> 
+<H2><A NAME="Member Functions"><FONT SIZE=6>M</FONT>ember <FONT SIZE=6>F</FONT>unctions</A>
+</H2> 
+<P> 
+</B></I></TT> 
+<P> 
+</B></I></TT> 
+<HR> 
+<H3><A NAME="AddDependantWindow()">AddDependantWindow()</A></H3> 
+<PRE>      void AddDependantWindow(BWindow *window);
+</PRE> 
+<P> 
+You can add a <i>window</i> to the dependancy list. The <i>window</i> will be closed when
+this window is closed in the <a href="#Quit()"><B>Quit</B></A> method.
+<p>
+
+
+<HR> 
+<H3><A NAME="FindWindowResource()">FindWindowResource()</A>
+</H3> 
+<PRE>      BMessage *FindWindowResource(char *windowname);
+</PRE> 
+<P> 
+<b>FindWindowResource</b> tries to locate a resource called <i>windowname</I> of type <CODE>B_ARCHIVED_OBJECT</CODE> in the resources.<P>
+If the window is not found, <b>FindWindowResource</b> will return a default window archive
+with the error in the window title. (This method cannot return <CODE>NULL</CODE> because the BWindow constructor is called with the return value.)
+Such an error can happen only during application development.
+<p>
+
+
+<HR> 
+<H3><A NAME="Quit()">Quit()</A>
+</H3> 
+<PRE>      virtual	void Quit(void);
+</PRE> 
+<P> 
+Closes the windows in the dependancy list. The list items are BMessengers, whose validity is checked
+before locking and quitting the child windows.
+<p>
+<HR>
+
+
+<H3><A NAME="QuitRequested()">QuitRequested()</A>
+</H3> 
+<PRE>      virtual	bool QuitRequested(void);
+</PRE> 
+<P> 
+The default <b>QuitRequested</b> calls <a href="#UpdateAllVariables()"><B>UpdateAllVariables</B></A> and returns <CODE>true</CODE>.
+<p>
+<HR>
+
+
+<H3><A NAME="SetViewVariable()">SetViewVariable()</A>
+</H3> 
+<PRE>      virtual void SetViewVariable(char *viewname, void *variable, const char *variabletype=NULL);
+</PRE> 
+<P> 
+<b>SetViewVariable</b> locates the view by name (<i>viewname</i>) and calls the <a href="IEEditableView.html">IEEditableView</A> method <a href="IEEditableView.html#SetVariable()">SetVariable</A> to assign a variable address and type to the view.
+<BR>If <i>variabletype</i> is <code>NULL</code>, the existing type will not be changed.
+<p>
+<HR>
+
+<H3><A NAME="Show()">Show()</A>
+</H3> 
+<PRE>      virtual void Show(void);
+</PRE> 
+<P> 
+The default <b>Show</b> calls <a href="#UpdateAllViews()"><B>UpdateAllViews</B></A> to update the views before displaying the window.
+<p>
+<HR>
+
+
+<H3><A NAME="UpdateAllVariables()">UpdateAllVariables()</A>
+</H3> 
+<PRE>      virtual void UpdateAllVariables(BView *parentview=NULL);
+</PRE> 
+<P> 
+Calls <a href="#UpdateVariable()"><B>UpdateVariable</B></A> for all children of <i>parentview</i> or for the whole window if <i>parentview</i> is <CODE>NULL</CODE>.
+<p>
+<HR>
+
+
+<H3><A NAME="UpdateAllViews()">UpdateAllViews()</A>
+</H3> 
+<PRE>      virtual void UpdateAllViews(BView *parentview=NULL);
+</PRE> 
+<P> 
+Calls <a href="#UpdateView()"><B>UpdateView</B></A> for all children of <i>parentview</i> or for the whole window if <i>parentview</i> is <CODE>NULL</CODE>.
+<p>
+<HR>
+
+
+<H3><A NAME="UpdateVariable()">UpdateVariable()</A>
+</H3> 
+<PRE>      virtual void UpdateVariable(char *viewname);
+</PRE> 
+<P> 
+<b>UpdateVariable</b> locates the view by name (<i>viewname</i>) and calls the <a href="IEEditableView.html">IEEditableView</A> method <a href="IEEditableView.html#UpdateVariable()">UpdateVariable</A> to convert the view state to the variable.
+<p>
+<HR>
+
+
+<H3><A NAME="UpdateView()">UpdateView()</A>
+</H3> 
+<PRE>      virtual void UpdateView(char *viewname);
+</PRE> 
+<P> 
+<b>UpdateView</b> locates the view by name (<i>viewname</i>) and calls the <a href="IEEditableView.html">IEEditableView</A> method <a href="IEEditableView.html#UpdateView()">UpdateView</A> to initialize the view based on the variable contents.
+<p>
+<HR>
+
+
+</BODY>
+</HTML>
