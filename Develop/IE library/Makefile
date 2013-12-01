@@ -7,7 +7,7 @@
 ## Application Specific Settings ---------------------------------------------
 
 # specify the name of the binary
-NAME= InterfaceElements
+NAME= libie.so
 
 # specify the type of binary
 #	APP:	Application
